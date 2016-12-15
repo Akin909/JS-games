@@ -5,21 +5,54 @@
     <meta charset="utf-8">
     <title>Canvas Game</title>
     <style media="screen">
+    @import url('https://fonts.googleapis.com/css?family=Montserrat|Nunito+Sans');
         * {
             padding: 0;
             margin: 0;
         }
-
+        body{
+          background: #6bd994;
+        }
         canvas {
-            background: #eee;
+            /*background: #eee;*/
             display: block;
             margin: 0 auto;
+            background-image: url(http://cliparts.co/cliparts/yck/rdp/yckrdpjdi.png);
+          	background-position: 0px 0px;
+          	background-repeat: repeat-x;
+
+          	animation: animatedBackground 40s linear infinite;
+        }
+
+        @keyframes animatedBackground {
+          	from { background-position: 0 0; }
+          	to { background-position: 100% 0; }
+          }
+
+        .hint{
+          font-family: "Nunito Sans";
+          font-size: 2em;
+          margin-top: 0.5em;
+          text-align: center;
+        }
+        .hint>p{
+          color: white;
+        }
+        .score{
+          color: red;
+        }
+        .score-message{
+          color: #e08be2;
         }
     </style>
 </head>
 
 <body>
     <canvas id="canvas" width="480" height="320"></canvas>
+    <div class="hint">
+      <p>Hit Space to reset</p>
+      <span>Score: <span class="score"></span></span>
+    </div>
     <script type="text/javascript" src="paddle-ball.js">
     </script>
 </body>
