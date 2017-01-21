@@ -16,20 +16,14 @@ playerImage.src = 'ship.png'
 //https://chrismalnu.files.wordpress.com/2016/02/clash.png?w=680
 /*Player object with all the relevant attributes with a method with access to
 these*/
-var shift = 0;
-var frameWidth = 100;
-var frameHeight = 100;
-var totalFrames = 24;
-var currentFrame = 0;
 var player = {
 	color: '#00A',
-	x: 120,
+	x: canvas_width,
 	y: 170,
 	width: 32,
 	height: 32,
 	draw: function() {
-		ctx.drawImage(playerImage, this.x, this.y, frameWidth, frameHeight,
-				120, 25, frameWidth, frameHeight)
+		ctx.drawImage(playerImage, this.x, this.y)
 			// ctx.fillStyle = this.color
 			// ctx.fillRect(this.x, this.y, this.width, this.height)
 	}
