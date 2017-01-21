@@ -5,6 +5,7 @@ body{
 }
 #canvas{
     margin: 0 20%;
-    background: white;
+    background: url('second-space.jpg');
+    background-size: cover;
 
 }

@@ -4,22 +4,28 @@ var playerBullets = [];
 var enemies = []
 
 const canvas_width = 480;
-const canvas_height = 420;
+const canvas_height = 620;
 canvas.width = canvas_width;
 canvas.height = canvas_height;
 
 document.body.appendChild(canvas);
 
+var fire = new Audio('blaster.mp3');
+
+
 var playerImage = new Image();
 playerImage.src = 'ship.png'
-	// player.addEventListener('load',loadImage,false)
+
+var enemyImage = new Image();
+enemyImage.src = 'enemies.png';
+// player.addEventListener('load',loadImage,false)
 //https://chrismalnu.files.wordpress.com/2016/02/clash.png?w=680
 /*Player object with all the relevant attributes with a method with access to
 these*/
 var player = {
 	color: '#00A',
-	x: canvas_width,
-	y: 170,
+	x: canvas_width / 2,
+	y: canvas_height / 2 + 200,
 	width: 32,
 	height: 32,
 	draw: function() {
@@ -66,7 +72,6 @@ document.addEventListener('keyup', function(event) {
 
 function update() {
 	if (keyStatus.spacebar) {
-		console.log('shoot')
 		player.shoot();
 	}
 	if (keyStatus.right) {
@@ -94,12 +99,15 @@ function update() {
 		return bullet.active;
 	});
 	enemies.forEach((enemy) => {
-		enemy.update();
-	})
+			enemy.update();
+		})
+		/*This random number generator controls the rate at which new enemy ships are
+			drawn I've also added a limit of 5*/
 	enemies = enemies.filter(enemy => enemy.active)
-	if (Math.random() < 0.1) {
+	if (Math.random() < 0.03 && enemies.length <= 5) {
 		enemies.push(Enemy());
 	}
+	handleCollisions();
 }
 
 
@@ -118,7 +126,7 @@ function Bullet(I) {
 	I.yVelocity = -I.speed;
 	I.height = 3;
 	I.width = 3;
-	I.color = '#000000';
+	I.color = '#FF0000';
 
 	I.inBounds = function() {
 		return I.x >= 0 && I.x <= canvas_width && I.y > 0 && I.y <= canvas_height;
@@ -137,6 +145,8 @@ function Bullet(I) {
 }
 
 player.shoot = function() {
+	fire.currentTime = 0;
+	fire.play();
 	var bulletPosition = this.midpoint();
 
 	playerBullets.push(Bullet({
@@ -159,7 +169,7 @@ function Enemy(I) {
 	I.active = true;
 	I.age = Math.floor(Math.random() * 128)
 
-	I.color = '#A2B';
+	// 	I.color = '#A2B';
 	I.x = canvas_width / 4 + Math.random() * canvas_width / 2;
 	I.y = 0;
 	I.xVelocity = 0;
@@ -174,8 +184,9 @@ function Enemy(I) {
 	};
 
 	I.draw = function() {
-		ctx.fillStyle = this.color;
-		ctx.fillRect(this.x, this.y, this.width, this.height);
+		ctx.drawImage(enemyImage, I.x, I.y)
+			// ctx.fillStyle = this.color;
+			// ctx.fillRect(this.x, this.y, this.width, this.height);
 	};
 
 	I.update = function() {
@@ -185,7 +196,9 @@ function Enemy(I) {
 		I.xVelocity = 3 * Math.sin(I.age * Math.PI / 64);
 
 		I.age++;
-
+		I.explode = function() {
+		this.active = false;	
+		}
 		I.active = I.active && I.inBounds();
 	};
 
@@ -193,13 +206,32 @@ function Enemy(I) {
 }
 
 
-//
-// player.draw = function() {
-// 	this.sprite.draw(ctx, this.x, this.y);
-// }
+function collides(a, b) {
+	return a.x < b.x + b.width &&
+		a.x + a.width > b.x && a.y < b.y +
+		b.height && a.y + a.height > b.y;
+}
 
+function handleCollisions() {
+	playerBullets.forEach(function(bullet) {
+		enemies.forEach(function(enemy) {
+			if (collides(enemy, bullet)) {
+				enemy.explode();
+			}
+		})
+	});
+	enemies.forEach((enemy) => {
+		if (collides(enemy, player)) {
+			enemy.explode();
+			player.explode();
+		}
 
+	})
+}
 
+player.explode = function() {
+	this.active = false;
+}
 
 
 
