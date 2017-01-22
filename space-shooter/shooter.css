@@ -1,13 +1,41 @@
 @import url('https://fonts.googleapis.com/css?family=VT323');
 body{
-
-    background: yellow;
-
+    background: #66CCFF;
+    font-family: 'VT323', monospace;
+    margin: 0;
+}
+.title{
+    text-align: center;
+    font-weight: bold;
+    font-size: 3em;
+    color: #00FF00;
+    text-shadow: -2px 3px 2px #191919;
+    width: 100%;
+    background:url('title-bg.jpg');
+    margin: 0, 0;
+    box-shadow: -2px -5px 0px #4C4C4C;
+    background-size: cover;
 
 }
+.title>h1{
+    margin: 0;
+    padding: 0.7em;
+}
+.game-container{
+    margin-top: 1em;
+    width:100%;
+    position: relative;
+}
 #canvas{
-    margin: 0 20%;
+    display: block;
+    margin: 0 auto;
     background: url('second-space.jpg');
     background-size: cover;
+}
+.help{
+    position: relative;
+    display: block;
+    float: bottom;
+    width: 100%;
 
 }

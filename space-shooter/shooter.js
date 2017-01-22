@@ -10,7 +10,6 @@ const canvas_height = 620;
 canvas.width = canvas_width;
 canvas.height = canvas_height;
 
-document.body.appendChild(canvas);
 
 var fire = new Audio('blaster.mp3');
 var explosion = new Audio('Explosion.mp3');
@@ -31,10 +30,11 @@ var player = {
 	y: canvas_height / 2 + 200,
 	width: 32,
 	height: 32,
+	active: true,
 	draw: function() {
-		ctx.drawImage(playerImage, this.x, this.y)
-			// ctx.fillStyle = this.color
-			// ctx.fillRect(this.x, this.y, this.width, this.height)
+		if (this.active) {
+			ctx.drawImage(playerImage, this.x, this.y)
+		}
 	}
 }
 
@@ -217,8 +217,14 @@ function draw() {
 		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 			//Resets the game if score is greater than a preset win limit
 		clearInterval(gameInterval);
+		//If player is hit becomes inactive and game stops and message is printed
+	}	else if (!player.active) {
+			ctx.font = '40px VT323';
+		ctx.fillStyle = 'red'
+			ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
+			clearInterval(gameInterval);
 
-	}
+		}
 }
 
 function Bullet(I) {
@@ -305,7 +311,9 @@ function Enemy(I) {
 				this.active = false;
 				createExplosion(this.x, this.y, '#525252');
 				createExplosion(this.x, this.y, '#FFA318');
-				score += 1;
+				if (player.active) {
+					score += 1
+				}
 			}
 		}
 		I.active = I.active && I.inBounds();
