@@ -1,11 +1,23 @@
+var start = document.querySelector('.start')
+	// start.addEventListener('click', startGame)
+
+
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
 var playerBullets = [];
 var enemies = []
 var score = 0;
 var winLimit = 15;
+//This var is a modifier that changes game object velocity based on actual time
+//passing
+var delta = 0;
 
-const canvas_width = 480;
+
+document.querySelector('.reset').onclick = function() {
+	location.reload();
+}
+
+const canvas_width = 1000;
 const canvas_height = 620;
 canvas.width = canvas_width;
 canvas.height = canvas_height;
@@ -25,7 +37,6 @@ enemyImage.src = 'enemies.png';
 /*Player object with all the relevant attributes with a method with access to
 these*/
 var player = {
-	color: '#00A',
 	x: canvas_width / 2,
 	y: canvas_height / 2 + 200,
 	width: 32,
@@ -81,7 +92,7 @@ function Particle() {
 	this.velocityY = 0;
 	this.scaleSpeed = 0.5;
 
-	this.update = function(ms) {
+	this.update = function(ms, delta) {
 		//Shrinking	
 		this.scale -= this.scaleSpeed * ms / 1000.0
 
@@ -89,8 +100,8 @@ function Particle() {
 			this.scale = 0;
 		}
 		//Moving away from the explosion center
-		this.x += this.velocityX * ms / 1000.0;
-		this.y += this.velocityY * ms / 1000.0;
+		this.x += this.velocityX * ms / 1000.0//  * delta;
+		this.y += this.velocityY * ms / 1000.0// * delta;
 
 		this.draw = function() {
 			ctx.save();
@@ -130,12 +141,12 @@ function createExplosion(x, y, color) {
 		particle.radius = randomFloat(minSize, maxSize)
 		particle.color = color;
 
-		particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed)
+		particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed)// * delta;
 		var speed = randomFloat(minSpeed, maxSpeed);
 
 		//velocity is rotated by 'angle'
-		particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0);
-		particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0);
+		particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0)// * delta;
+		particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0)// * delta;
 
 		//Add newly created particle to 'particles' array
 		particles.push(particle);
@@ -146,50 +157,46 @@ function randomFloat(min, max) {
 	return min + Math.random() * (max - min);
 }
 
-function generateExplosion() {
+function generateExplosion(delta) {
 	for (var i = 0, len = particles.length; i < len; i++) {
 		let particle = particles[i];
-		particle.update(20);
+		particle.update(20, delta);
 		particle.draw()
 	}
 }
 
 
 
-
-
-
-
-function update() {
+function update(delta) {
 	if (keyStatus.spacebar) {
 		player.shoot();
 	}
 	if (keyStatus.right) {
-		player.x += 5;
+		player.x += 0.8 * delta;
 	}
 	if (keyStatus.left) {
-		player.x -= 5;
+		player.x -= 0.8 * delta;
 	}
 	if (keyStatus.up) {
-		player.y -= 5;
+		player.y -= 0.8 * delta;
 	}
 	if (keyStatus.down) {
-		player.y += 5;
+		player.y += 0.8 * delta;
 	}
 	if (player.x + player.width >= canvas.width) {
-		player.x -= 5;
+		player.x -= 0.8 * delta;
 	}
 	if (player.x <= 0) {
-		player.x += 5;
+		player.x += 0.8 * delta;
 	}
 	playerBullets.forEach(function(bullet) {
-		bullet.update();
+		bullet.update(delta);
 	})
 	playerBullets = playerBullets.filter(function(bullet) {
 		return bullet.active;
 	});
 	enemies.forEach((enemy) => {
-			enemy.update();
+			enemy.update(delta);
 		})
 		/*This random number generator controls the rate at which new enemy ships are
 			drawn I've also added a limit of 5*/
@@ -216,15 +223,15 @@ function draw() {
 		ctx.font = '40px VT323'
 		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 			//Resets the game if score is greater than a preset win limit
-		clearInterval(gameInterval);
-		//If player is hit becomes inactive and game stops and message is printed
-	}	else if (!player.active) {
-			ctx.font = '40px VT323';
+			// clearInterval(gameInterval);
+			//If player is hit becomes inactive and game stops and message is printed
+	} else if (!player.active) {
+		ctx.font = '40px VT323';
 		ctx.fillStyle = 'red'
-			ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
-			clearInterval(gameInterval);
+		ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
+		// clearInterval(gameInterval);
 
-		}
+	}
 }
 
 function Bullet(I) {
@@ -243,9 +250,9 @@ function Bullet(I) {
 		ctx.fillStyle = this.color
 		ctx.fillRect(this.x, this.y, this.width, this.height)
 	}
-	I.update = () => {
-		I.x += I.xVelocity
-		I.y += I.yVelocity
+	I.update = (delta) => {
+		I.x += I.xVelocity * delta
+		I.y += I.yVelocity * delta
 
 		I.active = I.active && I.inBounds();
 	}
@@ -258,7 +265,7 @@ player.shoot = function() {
 	var bulletPosition = this.midpoint();
 
 	playerBullets.push(Bullet({
-		speed: 5,
+		speed: 0.8,
 		x: bulletPosition.x,
 		y: bulletPosition.y,
 
@@ -281,7 +288,7 @@ function Enemy(I) {
 	I.x = canvas_width / 4 + Math.random() * canvas_width / 2;
 	I.y = 0;
 	I.xVelocity = 0;
-	I.yVelocity = 2;
+	I.yVelocity = 0.4;
 
 	I.width = 32;
 	I.height = 32;
@@ -297,11 +304,11 @@ function Enemy(I) {
 			// ctx.fillRect(this.x, this.y, this.width, this.height);
 	};
 
-	I.update = function() {
-		I.x += I.xVelocity;
-		I.y += I.yVelocity;
+	I.update = function(delta) {
+		I.x += I.xVelocity * delta;
+		I.y += I.yVelocity * delta;
 
-		I.xVelocity = 3 * Math.sin(I.age * Math.PI / 64);
+		I.xVelocity = 0.3 * Math.sin(I.age * Math.PI / 64);
 
 		I.age++;
 		I.explode = function() {
@@ -352,20 +359,33 @@ player.explode = function() {
 	this.createExplosion(this.x, this.y, '#525252');
 	this.createExplosion(this.x, this.y, '#FFA318');
 }
+var lastFrameTimeMs = 0, // The last time the loop was run
+	maxFPS = 60; // The maximum FPS we want to allow
+var timestep = 1000 / 60;
 
+function runGame(timeStamp) {
+	//Throttle the framerate
+	if (timeStamp < lastFrameTimeMs + (1000 / maxFPS)) {
+		requestAnimationFrame(runGame);
+		return;
+	}
+	delta += timeStamp - lastFrameTimeMs;
+	lastFrameTimeMs = timeStamp
 
-
-
-
-
-
-
-
-
-
-
-var FPS = 30;
-var gameInterval = setInterval(function() {
-	update();
+	//Simulate the total elapsed time in fixed-size chunks
+	while (delta >= timestep) {
+		//Time step value is reduced further to slow movement of game objects
+		update(timestep/3.5);
+		delta -= timestep;
+	}
 	draw();
-}, 1000 / FPS)
+	requestAnimationFrame(runGame);
+}
+requestAnimationFrame(runGame)
+
+//This interval starts the game
+// var FPS = 30;
+// var gameInterval = setInterval(function() {
+// 	update();
+// 	draw();
+// }, 1000 / FPS)
