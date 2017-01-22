@@ -2,6 +2,8 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
 var playerBullets = [];
 var enemies = []
+var score = 0;
+var winLimit = 15;
 
 const canvas_width = 480;
 const canvas_height = 620;
@@ -11,6 +13,7 @@ canvas.height = canvas_height;
 document.body.appendChild(canvas);
 
 var fire = new Audio('blaster.mp3');
+var explosion = new Audio('Explosion.mp3');
 
 
 var playerImage = new Image();
@@ -68,6 +71,93 @@ document.addEventListener('keyup', function(event) {
 	}
 });
 
+function Particle() {
+	this.scale = 1;
+	this.x = 0;
+	this.y = 0;
+	this.radius = 20;
+	this.color = '#000'
+	this.velocityX = 0;
+	this.velocityY = 0;
+	this.scaleSpeed = 0.5;
+
+	this.update = function(ms) {
+		//Shrinking	
+		this.scale -= this.scaleSpeed * ms / 1000.0
+
+		if (this.scale <= 0) {
+			this.scale = 0;
+		}
+		//Moving away from the explosion center
+		this.x += this.velocityX * ms / 1000.0;
+		this.y += this.velocityY * ms / 1000.0;
+
+		this.draw = function() {
+			ctx.save();
+			ctx.translate(this.x, this.y);
+			ctx.scale(this.scale, this.scale)
+
+			//Drawing a filled circle in the particle's local scope
+			ctx.beginPath();
+			ctx.arc(0, 0, this.radius, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fillStyle = this.color;
+			ctx.fill();
+
+			ctx.restore();
+		}
+	}
+}
+
+var particles = [];
+/* Creates explosion, all particles move and shrink at the same speed */
+function createExplosion(x, y, color) {
+	var minSize = 10;
+	var maxSize = 30;
+	var count = 10;
+	var minSpeed = 60.0;
+	var maxSpeed = 200.0;
+	var minScaleSpeed = 1.0;
+	var maxScaleSpeed = 4.0;
+	//Creating 4 particles that scatter at 0,90,180,270 degrees, changed to
+	//scatter in many more directions with 360/count	
+	for (var angle = 0; angle < 360; angle += Math.round(360 / count)) {
+		var particle = new Particle();
+		//Particle will start at the explosion center
+		particle.x = x;
+		particle.y = y;
+
+		particle.radius = randomFloat(minSize, maxSize)
+		particle.color = color;
+
+		particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed)
+		var speed = randomFloat(minSpeed, maxSpeed);
+
+		//velocity is rotated by 'angle'
+		particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0);
+		particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0);
+
+		//Add newly created particle to 'particles' array
+		particles.push(particle);
+	}
+}
+
+function randomFloat(min, max) {
+	return min + Math.random() * (max - min);
+}
+
+function generateExplosion() {
+	for (var i = 0, len = particles.length; i < len; i++) {
+		let particle = particles[i];
+		particle.update(20);
+		particle.draw()
+	}
+}
+
+
+
+
+
 
 
 function update() {
@@ -118,6 +208,17 @@ function draw() {
 		bullet.draw();
 	});
 	enemies.forEach((enemy) => enemy.draw())
+	generateExplosion();
+	ctx.font = '30px VT323'
+	ctx.fillText(`Score: ${score}`, 5, 30)
+	if (score >= winLimit) {
+		score = 0;
+		ctx.font = '40px VT323'
+		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
+			//Resets the game if score is greater than a preset win limit
+		clearInterval(gameInterval);
+
+	}
 }
 
 function Bullet(I) {
@@ -126,6 +227,7 @@ function Bullet(I) {
 	I.yVelocity = -I.speed;
 	I.height = 3;
 	I.width = 3;
+	fire.currentTime = 0;
 	I.color = '#FF0000';
 
 	I.inBounds = function() {
@@ -197,7 +299,14 @@ function Enemy(I) {
 
 		I.age++;
 		I.explode = function() {
-		this.active = false;	
+			if (this) {
+				explosion.currentTime = 0;
+				explosion.play();
+				this.active = false;
+				createExplosion(this.x, this.y, '#525252');
+				createExplosion(this.x, this.y, '#FFA318');
+				score += 1;
+			}
 		}
 		I.active = I.active && I.inBounds();
 	};
@@ -215,7 +324,8 @@ function collides(a, b) {
 function handleCollisions() {
 	playerBullets.forEach(function(bullet) {
 		enemies.forEach(function(enemy) {
-			if (collides(enemy, bullet)) {
+			if (collides(bullet, enemy)) {
+				// console.log(enemy)
 				enemy.explode();
 			}
 		})
@@ -231,6 +341,8 @@ function handleCollisions() {
 
 player.explode = function() {
 	this.active = false;
+	this.createExplosion(this.x, this.y, '#525252');
+	this.createExplosion(this.x, this.y, '#FFA318');
 }
 
 
@@ -245,7 +357,7 @@ player.explode = function() {
 
 
 var FPS = 30;
-setInterval(function() {
+var gameInterval = setInterval(function() {
 	update();
 	draw();
 }, 1000 / FPS)
