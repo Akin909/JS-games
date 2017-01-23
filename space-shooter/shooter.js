@@ -1,6 +1,7 @@
 var start = document.querySelector('.start')
 	// start.addEventListener('click', startGame)
-
+var stopBtn = document.querySelector('.stop')
+stopBtn.addEventListener('click',stop)
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
@@ -125,7 +126,7 @@ var particles = [];
 function createExplosion(x, y, color) {
 	var minSize = 10;
 	var maxSize = 30;
-	var count = 10;
+	var count = 20;
 	var minSpeed = 60.0;
 	var maxSpeed = 200.0;
 	var minScaleSpeed = 1.0;
@@ -273,7 +274,8 @@ player.shoot = function() {
 };
 player.midpoint = function() {
 	return {
-		x: this.x + this.width / 2,
+		//added 65 to position where bullets originate as they were off center
+		x: this.x + (this.width + 65) / 2,
 		y: this.y + this.height / 2
 	};
 };
@@ -340,8 +342,8 @@ function handleCollisions() {
 	playerBullets.forEach(function(bullet) {
 		enemies.forEach(function(enemy) {
 			if (collides(bullet, enemy)) {
-				// console.log(enemy)
 				enemy.explode();
+				bullet.active = false;
 			}
 		})
 	});
@@ -350,14 +352,16 @@ function handleCollisions() {
 			enemy.explode();
 			player.explode();
 		}
-
 	})
 }
 
 player.explode = function() {
-	this.active = false;
+	if (this.active) {
 	this.createExplosion(this.x, this.y, '#525252');
 	this.createExplosion(this.x, this.y, '#FFA318');
+	this.active = false;
+	}
+	return;
 }
 var lastFrameTimeMs = 0, // The last time the loop was run
 	maxFPS = 60; // The maximum FPS we want to allow
@@ -366,7 +370,7 @@ var timestep = 1000 / 60;
 function runGame(timeStamp) {
 	//Throttle the framerate
 	if (timeStamp < lastFrameTimeMs + (1000 / maxFPS)) {
-		requestAnimationFrame(runGame);
+		frameID = requestAnimationFrame(runGame);
 		return;
 	}
 	delta += timeStamp - lastFrameTimeMs;
@@ -379,13 +383,16 @@ function runGame(timeStamp) {
 		delta -= timestep;
 	}
 	draw();
-	requestAnimationFrame(runGame);
+frameID = requestAnimationFrame(runGame);
 }
-requestAnimationFrame(runGame)
+var frameID = requestAnimationFrame(runGame)
 
-//This interval starts the game
-// var FPS = 30;
-// var gameInterval = setInterval(function() {
-// 	update();
-// 	draw();
-// }, 1000 / FPS)
+var running = false,
+	started = false;
+
+function stop(){
+	running = false;
+	started = false;
+	cancelAnimationFrame(frameID);
+}
+
