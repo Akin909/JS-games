@@ -2,7 +2,12 @@ var startBtn = document.querySelector('.start');
 startBtn.addEventListener('click', start);
 var stopBtn = document.querySelector('.stop')
 stopBtn.addEventListener('click', stop)
-
+window.addEventListener('keydown',function(event) {
+	// This line prevents the default action of the Space and arrow keys	
+	if ([32,37,38,39,40].indexOf(event.keyCode) > -1) {
+		event.preventDefault();	
+	}
+},false);
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
@@ -38,7 +43,6 @@ var explosion = new Audio('Explosion.mp3');
 
 var playerImage = new Image();
 playerImage.src = 'ship.png'
-
 var enemyImage = new Image();
 enemyImage.src = 'enemies.png';
 // player.addEventListener('load',loadImage,false)
@@ -48,8 +52,8 @@ these*/
 var player = {
 	x: canvas_width / 2,
 	y: canvas_height / 2 + 200,
-	width: 32,
-	height: 32,
+	width: playerImage.naturalWidth,
+	height: playerImage.naturalHeight,
 	active: true,
 	draw: function() {
 		if (this.active) {
@@ -266,7 +270,7 @@ function Bullet(I) {
 	I.active = true;
 	I.xVelocity = 0;
 	I.yVelocity = -I.speed;
-	I.height = 3;
+	I.height = 5;
 	I.width = 3;
 	fire.currentTime = 0;
 	I.color = '#FF0000';
@@ -318,9 +322,10 @@ function Enemy(I) {
 	I.y = 0;
 	I.xVelocity = 0;
 	I.yVelocity = 0.4;
-
-	I.width = 32;
-	I.height = 32;
+	//Using naturalWidth native methods gives me the image loaded in's width and
+	//height instead of using static values
+	I.width = enemyImage.naturalWidth;
+	I.height = enemyImage.naturalHeight;
 
 	I.inBounds = function() {
 		return I.x >= 0 && I.x <= canvas_width &&
