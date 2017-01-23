@@ -1,7 +1,8 @@
-var start = document.querySelector('.start')
-	// start.addEventListener('click', startGame)
+var startBtn = document.querySelector('.start');
+startBtn.addEventListener('click', start);
 var stopBtn = document.querySelector('.stop')
-stopBtn.addEventListener('click',stop)
+stopBtn.addEventListener('click', stop)
+
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
@@ -9,10 +10,16 @@ var playerBullets = [];
 var enemies = []
 var score = 0;
 var winLimit = 15;
+var frameID;
+var running = false,
+	started = false;
+
 //This var is a modifier that changes game object velocity based on actual time
 //passing
 var delta = 0;
-
+canvas.addEventListener('click',()=>{
+	running ? stop():	start();	
+})
 
 document.querySelector('.reset').onclick = function() {
 	location.reload();
@@ -71,8 +78,6 @@ document.addEventListener('keydown', (event) => {
 
 	}
 
-	// 	console.log(keyStatus)
-
 });
 
 document.addEventListener('keyup', function(event) {
@@ -82,6 +87,12 @@ document.addEventListener('keyup', function(event) {
 		}
 	}
 });
+
+window.onload = ()=>{
+ctx.font = '45px VT323';
+ctx.fillStyle = 'green';
+ctx.fillText('Click to Start',(canvas_width -250)/2,canvas_height/2);
+}
 
 function Particle() {
 	this.scale = 1;
@@ -101,8 +112,8 @@ function Particle() {
 			this.scale = 0;
 		}
 		//Moving away from the explosion center
-		this.x += this.velocityX * ms / 1000.0//  * delta;
-		this.y += this.velocityY * ms / 1000.0// * delta;
+		this.x += this.velocityX * ms / 1000.0 //  * delta;
+		this.y += this.velocityY * ms / 1000.0 // * delta;
 
 		this.draw = function() {
 			ctx.save();
@@ -142,12 +153,12 @@ function createExplosion(x, y, color) {
 		particle.radius = randomFloat(minSize, maxSize)
 		particle.color = color;
 
-		particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed)// * delta;
+		particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed) // * delta;
 		var speed = randomFloat(minSpeed, maxSpeed);
 
 		//velocity is rotated by 'angle'
-		particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0)// * delta;
-		particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0)// * delta;
+		particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0) // * delta;
+		particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0) // * delta;
 
 		//Add newly created particle to 'particles' array
 		particles.push(particle);
@@ -207,7 +218,10 @@ function update(delta) {
 	}
 	handleCollisions();
 }
-
+function reset() {
+	stop();	
+	score = 0;
+}
 
 function draw() {
 	ctx.clearRect(0, 0, canvas_width, canvas_height)
@@ -224,14 +238,13 @@ function draw() {
 		ctx.font = '40px VT323'
 		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 			//Resets the game if score is greater than a preset win limit
-			// clearInterval(gameInterval);
+		reset()
 			//If player is hit becomes inactive and game stops and message is printed
 	} else if (!player.active) {
 		ctx.font = '40px VT323';
 		ctx.fillStyle = 'red'
 		ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
-		// clearInterval(gameInterval);
-
+		reset();
 	}
 }
 
@@ -357,9 +370,9 @@ function handleCollisions() {
 
 player.explode = function() {
 	if (this.active) {
-	this.createExplosion(this.x, this.y, '#525252');
-	this.createExplosion(this.x, this.y, '#FFA318');
-	this.active = false;
+		this.createExplosion(this.x, this.y, '#525252');
+		this.createExplosion(this.x, this.y, '#FFA318');
+		this.active = false;
 	}
 	return;
 }
@@ -379,20 +392,35 @@ function runGame(timeStamp) {
 	//Simulate the total elapsed time in fixed-size chunks
 	while (delta >= timestep) {
 		//Time step value is reduced further to slow movement of game objects
-		update(timestep/3.5);
+		update(timestep / 3.5);
 		delta -= timestep;
 	}
 	draw();
-frameID = requestAnimationFrame(runGame);
+	frameID = requestAnimationFrame(runGame);
 }
-var frameID = requestAnimationFrame(runGame)
+// var frameID = requestAnimationFrame(runGame)
 
-var running = false,
-	started = false;
-
-function stop(){
+function stop() {
+	ctx.font = '50px VT323';
+	ctx.fillStyle = 'Green';
+	ctx.fillText('Paused',(canvas_width - 100)/2,canvas_height/2)
 	running = false;
 	started = false;
 	cancelAnimationFrame(frameID);
 }
 
+function start() {
+	if (!started) { //don't request multiple frames
+		started = true;
+		//Dummy frame to get our timestamps and initial drawing right.
+		//Track the frame ID so we can cancel it if we stop quickly.
+		frameID = requestAnimationFrame(function(timeStamp) {
+			draw(1); //initial draw	
+			running = true;
+			//reset some time tracking variables
+			lastFrameTimeMs = timeStamp;
+			//start the main loop
+			frameID = requestAnimationFrame(runGame);
+		})
+	}
+}

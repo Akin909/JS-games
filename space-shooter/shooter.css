@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=VT323');
 body{
-    background:url('http://wallpapercave.com/wp/1I3yb5l.jpg');
+    background:url('title-bg.jpg');
+/* url('http://wallpapercave.com/wp/1I3yb5l.jpg'); */
     background-size: cover;
     font-family: 'VT323', monospace;
     margin: 0;
@@ -12,9 +13,11 @@ body{
     color: #00FF00;
     text-shadow: -2px 3px 2px #191919;
     width: 100%;
-    background:url('title-bg.jpg');
+    background:hsla(0, 0%, 100%, 0.6);
     margin: 0, 0;
-    box-shadow: -2px -5px 0px #4C4C4C;
+    -webkit-box-shadow: -4px 9px 10px -4px rgba(0,0,0,0.6);
+    -moz-box-shadow: -4px 9px 10px -4px rgba(0,0,0,0.6);
+    box-shadow: -4px 9px 10px -4px rgba(0,0,0,0.6);
     background-size: cover;
 
 }
@@ -29,6 +32,21 @@ body{
 }
 .buttons{
     text-align: center;
+    margin: 0.5em;
+}
+.buttons>button{
+    font-family: 'VT323', monospace;
+    font-size: 1.5em;
+    width: 5rem;
+    height: 5rem;
+    border-radius:50%;
+    border: 0px solid;
+    -webkit-box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
+    -moz-box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
+    box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
+    background: #FF0000;
+    color: white;
+    text-shadow: 1px 1px 0px black;
 }
 #canvas{
     display: block;
@@ -40,8 +58,23 @@ body{
 }
 .help{
     position: relative;
+    margin: 0 auto;
     display: block;
     float: bottom;
-    width: 100%;
-
+    width: 80%;
+    background: #E6E6E6;
+    padding: 0.5em;
+    text-align: center;
 }
+.instruct{
+    text-align: center;
+    margin: 0 auto;
+    padding: 0 0 1em 0;
+}
+
+.instruct>li{
+    width:40%;
+    margin:0 auto;
+
+
+    }
