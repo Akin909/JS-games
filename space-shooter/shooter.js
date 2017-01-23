@@ -15,7 +15,7 @@ var playerBullets = [];
 var enemies = []
 var score = 0;
 var winLimit = 15;
-var frameID;
+var frameID = 0;
 var running = false,
 	started = false;
 var currentStatus ='';
@@ -53,7 +53,7 @@ enemyImage.src = 'enemies.png';
 these*/
 var player = {
 	x: canvas_width / 2,
-	y: canvas_height / 2 + 200,
+	y: canvas_height / 2,
 	width: playerImage.naturalWidth,
 	height: playerImage.naturalHeight,
 	active: true,
@@ -227,28 +227,23 @@ playerBullets.forEach(function(bullet) {
 
 function reset() {
 	canvas.removeEventListener('click', initialize);
-	// 	ctx.clearRect(0, 0, canvas_width, canvas_height)
 	if (score >= winLimit && running) {
 		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
-		// ctx.font = '40px VT323'
-		// ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 		currentStatus = 'You Win!'
 	}
 	if (!player.active) {
+		console.log(frameID)
+		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
-		// ctx.font = '50px VT323';
-		// ctx.fillStyle = 'Green';
-		// ctx.fillText('Game Over!', (canvas_width - 180) / 2, canvas_height / 2);
 		currentStatus = 'Game Over!'
-		cancelAnimationFrame(frameID);
 	}
 }
 
 function draw() {
-	// 	cancelAnimationFrame(frameID);
+	console.log('frameID: ',frameID);
 	running = true;
 	ctx.clearRect(0, 0, canvas_width, canvas_height);
 	player.draw();
@@ -446,6 +441,7 @@ var fpsDisplay = document.getElementById('fpsDisplay');
 
 function stop() {
 	if (running) {
+		currentStatus = 'Paused';
 		ctx.font = '50px VT323';
 		ctx.fillStyle = 'Green';
 		ctx.fillText(currentStatus, (canvas_width - 100) / 2, canvas_height / 2)
@@ -458,6 +454,7 @@ function stop() {
 function start() {
 	if (!started) { //don't request multiple frames
 		started = true;
+		currentStatus = '';
 		//Dummy frame to get our timestamps and initial drawing right.
 		//Track the frame ID so we can cancel it if we stop quickly.
 		frameID = requestAnimationFrame(function(timeStamp) {
