@@ -257,14 +257,7 @@ function draw() {
 	ctx.fillText(`Score: ${score}`, 5, 30);
 	ctx.fillText(currentStatus,(canvas_width - 180) / 2, canvas_height / 2);
 	fpsDisplay.textContent = Math.round(fps) + ' FPS'; // display the FPS
-	if (score >= winLimit) {
-		//Resets the game if score is greater than a preset win limit
-		reset();
-
-		//If player is hit becomes inactive and game stops and message is printed
-	} else if (!player.active) {
-		reset();
-	}
+	
 }
 
 function Bullet(I) {
@@ -434,6 +427,17 @@ function runGame(timeStamp) {
 	}
 	draw();
 	frameID = requestAnimationFrame(runGame);
+	//Reset called from within run game to ensure access to right FrameID
+	if (score >= winLimit) {
+		//Resets the game if score is greater than a preset win limit
+		reset();
+		ctx.fillText(currentStatus,canvas_width/2 -80, canvas_height/2)
+
+		//If player is hit becomes inactive and game stops and message is printed
+	} else if (!player.active) {
+		reset();
+		ctx.fillText(currentStatus,canvas_width/2 -80, canvas_height/2)
+	}
 }
 
 var fpsDisplay = document.getElementById('fpsDisplay');
