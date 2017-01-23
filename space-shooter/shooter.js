@@ -18,6 +18,7 @@ var winLimit = 15;
 var frameID;
 var running = false,
 	started = false;
+var currentStatus ='';
 
 //This var is a modifier that changes game object velocity based on actual time
 //passing
@@ -231,15 +232,17 @@ function reset() {
 		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
-		ctx.font = '40px VT323'
-		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
+		// ctx.font = '40px VT323'
+		// ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
+		currentStatus = 'You Win!'
 	}
 	if (!player.active) {
 		running = false;
 		started = false;
-		ctx.font = '50px VT323';
-		ctx.fillStyle = 'Green';
-		ctx.fillText('Game Over!', (canvas_width - 180) / 2, canvas_height / 2);
+		// ctx.font = '50px VT323';
+		// ctx.fillStyle = 'Green';
+		// ctx.fillText('Game Over!', (canvas_width - 180) / 2, canvas_height / 2);
+		currentStatus = 'Game Over!'
 		cancelAnimationFrame(frameID);
 	}
 }
@@ -247,15 +250,17 @@ function reset() {
 function draw() {
 	// 	cancelAnimationFrame(frameID);
 	running = true;
-	ctx.clearRect(0, 0, canvas_width, canvas_height)
+	ctx.clearRect(0, 0, canvas_width, canvas_height);
 	player.draw();
 	playerBullets.forEach(function(bullet) {
 		bullet.draw();
 	});
 	enemies.forEach((enemy) => enemy.draw());
 	generateExplosion();
-	ctx.font = '30px VT323'
-	ctx.fillText(`Score: ${score}`, 5, 30)
+	ctx.font = '40px VT323';
+	ctx.fillStyle = 'green'
+	ctx.fillText(`Score: ${score}`, 5, 30);
+	ctx.fillText(currentStatus,(canvas_width - 180) / 2, canvas_height / 2);
 	fpsDisplay.textContent = Math.round(fps) + ' FPS'; // display the FPS
 	if (score >= winLimit) {
 		//Resets the game if score is greater than a preset win limit
@@ -354,7 +359,6 @@ function Enemy(I) {
 				createExplosion(this.x, this.y, '#525252');
 				createExplosion(this.x, this.y, '#FFA318');
 				this.active = false;
-				console.log(running)
 			} else if (!this) {
 				return;
 			}
@@ -444,7 +448,7 @@ function stop() {
 	if (running) {
 		ctx.font = '50px VT323';
 		ctx.fillStyle = 'Green';
-		ctx.fillText('Paused', (canvas_width - 100) / 2, canvas_height / 2)
+		ctx.fillText(currentStatus, (canvas_width - 100) / 2, canvas_height / 2)
 		running = false;
 		started = false;
 		cancelAnimationFrame(frameID);
