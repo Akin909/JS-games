@@ -2,12 +2,12 @@ var startBtn = document.querySelector('.start');
 startBtn.addEventListener('click', start);
 var stopBtn = document.querySelector('.stop')
 stopBtn.addEventListener('click', stop)
-window.addEventListener('keydown',function(event) {
+window.addEventListener('keydown', function(event) {
 	// This line prevents the default action of the Space and arrow keys	
-	if ([32,37,38,39,40].indexOf(event.keyCode) > -1) {
-		event.preventDefault();	
+	if ([32, 37, 38, 39, 40].indexOf(event.keyCode) > -1) {
+		event.preventDefault();
 	}
-},false);
+}, false);
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d')
@@ -22,10 +22,11 @@ var running = false,
 //This var is a modifier that changes game object velocity based on actual time
 //passing
 var delta = 0;
-function initialize(){
-	running ? stop():	start();	
+
+function initialize() {
+	running ? stop() : start();
 }
-canvas.addEventListener('click',initialize);
+canvas.addEventListener('click', initialize);
 
 document.querySelector('.reset').onclick = function() {
 	location.reload();
@@ -93,10 +94,10 @@ document.addEventListener('keyup', function(event) {
 	}
 });
 
-window.onload = ()=>{
-ctx.font = '45px VT323';
-ctx.fillStyle = 'green';
-ctx.fillText('Click to Start',(canvas_width -250)/2,canvas_height/2);
+window.onload = () => {
+	ctx.font = '45px VT323';
+	ctx.fillStyle = 'green';
+	ctx.fillText('Click to Start', (canvas_width - 250) / 2, canvas_height / 2);
 }
 
 function Particle() {
@@ -185,28 +186,27 @@ function generateExplosion(delta) {
 
 
 function update(delta) {
-	if (keyStatus.spacebar) {
+	//Adding array length stops player from shooting endlessly
+	if (keyStatus.spacebar && playerBullets.length < 7) {
 		player.shoot();
 	}
-	if (keyStatus.right) {
+	//Conditionals stops player from moving of the canvas
+	if (keyStatus.right && player.x + player.width <= canvas_width) {
 		player.x += 0.8 * delta;
 	}
-	if (keyStatus.left) {
+	if (keyStatus.left && player.x >= 0) {
 		player.x -= 0.8 * delta;
 	}
-	if (keyStatus.up) {
+	if (keyStatus.up && player.y >= 0) {
 		player.y -= 0.8 * delta;
 	}
-	if (keyStatus.down) {
+	if (keyStatus.down && player.y + player.height <= canvas_height) {
 		player.y += 0.8 * delta;
 	}
-	if (player.x + player.width >= canvas.width) {
-		player.x -= 0.8 * delta;
-	}
-	if (player.x <= 0) {
-		player.x += 0.8 * delta;
-	}
-	playerBullets.forEach(function(bullet) {
+	
+	
+	
+playerBullets.forEach(function(bullet) {
 		bullet.update(delta);
 	})
 	playerBullets = playerBullets.filter(function(bullet) {
@@ -223,49 +223,50 @@ function update(delta) {
 	}
 	handleCollisions();
 }
+
 function reset() {
-	canvas.removeEventListener('click',initialize);
-	ctx.clearRect(0, 0, canvas_width, canvas_height)
-	if (score >= winLimit) {
-		score = 0;
+	canvas.removeEventListener('click', initialize);
+	// 	ctx.clearRect(0, 0, canvas_width, canvas_height)
+	if (score >= winLimit && running) {
+		cancelAnimationFrame(frameID);
+		running = false;
+		started = false;
 		ctx.font = '40px VT323'
 		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
-	cancelAnimationFrame(frameID);
-	}	
-if (!player.active) {
-		console.log('game over');
-	ctx.font = '50px VT323';
-	ctx.fillStyle = 'Green';
-	ctx.fillText('Game Over!',(canvas_width - 100)/2,canvas_height/2);
-	cancelAnimationFrame(frameID);
+	}
+	if (!player.active) {
+		running = false;
+		started = false;
+		ctx.font = '50px VT323';
+		ctx.fillStyle = 'Green';
+		ctx.fillText('Game Over!', (canvas_width - 180) / 2, canvas_height / 2);
+		cancelAnimationFrame(frameID);
 	}
 }
 
 function draw() {
+	// 	cancelAnimationFrame(frameID);
+	running = true;
 	ctx.clearRect(0, 0, canvas_width, canvas_height)
 	player.draw();
 	playerBullets.forEach(function(bullet) {
 		bullet.draw();
 	});
-	enemies.forEach((enemy) => enemy.draw())
+	enemies.forEach((enemy) => enemy.draw());
 	generateExplosion();
 	ctx.font = '30px VT323'
 	ctx.fillText(`Score: ${score}`, 5, 30)
-	fpsDisplay.textContent = Math.round(fps) + ' FPS';// display the FPS
+	fpsDisplay.textContent = Math.round(fps) + ' FPS'; // display the FPS
 	if (score >= winLimit) {
-			//Resets the game if score is greater than a preset win limit
+		//Resets the game if score is greater than a preset win limit
 		reset();
-		
-			//If player is hit becomes inactive and game stops and message is printed
+
+		//If player is hit becomes inactive and game stops and message is printed
 	} else if (!player.active) {
-			console.log('game over');
 		reset();
 	}
 }
 
-		// ctx.font = '40px VT323';
-		// ctx.fillStyle = 'red'
-		// ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
 function Bullet(I) {
 	I.active = true;
 	I.xVelocity = 0;
@@ -305,9 +306,10 @@ player.shoot = function() {
 };
 player.midpoint = function() {
 	return {
-		//added 65 to position where bullets originate as they were off center
-		x: this.x + (this.width + 65) / 2,
-		y: this.y + this.height / 2
+		//Uses the x position plus half of the width to generate bullets at middle of
+		//the ship and just its y position to ensure comes out of the right point
+		x: this.x + this.width / 2,
+		y: this.y
 	};
 };
 
@@ -349,14 +351,12 @@ function Enemy(I) {
 			if (this) {
 				explosion.currentTime = 0;
 				explosion.play();
-				this.active = false;
 				createExplosion(this.x, this.y, '#525252');
 				createExplosion(this.x, this.y, '#FFA318');
-				if (player.active) {
-					score += 1
-				}
-			} else if (!this){
-				return ;	
+				this.active = false;
+				console.log(running)
+			} else if (!this) {
+				return;
 			}
 		}
 		I.active = I.active && I.inBounds();
@@ -376,9 +376,11 @@ function handleCollisions() {
 	playerBullets.forEach(function(bullet) {
 		enemies.forEach(function(enemy) {
 			if (enemy && bullet && collides(bullet, enemy)) {
-				console.log('enemy',enemies)//,'bullet',bullet)
 				enemy.explode();
 				bullet.active = false;
+				if (player.active && running) {
+					score += 1
+				}
 			}
 		})
 	});
@@ -393,11 +395,11 @@ function handleCollisions() {
 player.explode = function() {
 	//Add conditional to prevent undefined error
 	if (this && this.active) {
-		this.createExplosion(this.x, this.y, '#525252');
-		this.createExplosion(this.x, this.y, '#FFA318');
+		createExplosion(this.x, this.y, '#525252');
+		createExplosion(this.x, this.y, '#FFA318');
 		this.active = false;
-	} else if (!this){
-	return ;	
+	} else if (!this) {
+		return;
 	}
 }
 
@@ -416,7 +418,7 @@ function runGame(timeStamp) {
 		frameID = requestAnimationFrame(runGame);
 		return;
 	}
-	if (timeStamp > lastFPSUpdate + 1000) {//Update every second
+	if (timeStamp > lastFPSUpdate + 1000) { //Update every second
 		fps = 0.25 * framesThisSecond + (1 - 0.25) * fps; //compute the new FPS	
 		lastFPSUpdate = timeStamp;
 		framesThisSecond = 0;
@@ -439,12 +441,14 @@ var fpsDisplay = document.getElementById('fpsDisplay');
 
 
 function stop() {
-	ctx.font = '50px VT323';
-	ctx.fillStyle = 'Green';
-	ctx.fillText('Paused',(canvas_width - 100)/2,canvas_height/2)
-	running = false;
-	started = false;
-	cancelAnimationFrame(frameID);
+	if (running) {
+		ctx.font = '50px VT323';
+		ctx.fillStyle = 'Green';
+		ctx.fillText('Paused', (canvas_width - 100) / 2, canvas_height / 2)
+		running = false;
+		started = false;
+		cancelAnimationFrame(frameID);
+	}
 }
 
 function start() {
