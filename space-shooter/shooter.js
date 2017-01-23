@@ -17,9 +17,10 @@ var running = false,
 //This var is a modifier that changes game object velocity based on actual time
 //passing
 var delta = 0;
-canvas.addEventListener('click',()=>{
+function initialize(){
 	running ? stop():	start();	
-})
+}
+canvas.addEventListener('click',initialize);
 
 document.querySelector('.reset').onclick = function() {
 	location.reload();
@@ -219,8 +220,21 @@ function update(delta) {
 	handleCollisions();
 }
 function reset() {
-	stop();	
-	score = 0;
+	canvas.removeEventListener('click',initialize);
+	ctx.clearRect(0, 0, canvas_width, canvas_height)
+	if (score >= winLimit) {
+		score = 0;
+		ctx.font = '40px VT323'
+		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
+	cancelAnimationFrame(frameID);
+	}	
+if (!player.active) {
+		console.log('game over');
+	ctx.font = '50px VT323';
+	ctx.fillStyle = 'Green';
+	ctx.fillText('Game Over!',(canvas_width - 100)/2,canvas_height/2);
+	cancelAnimationFrame(frameID);
+	}
 }
 
 function draw() {
@@ -233,21 +247,21 @@ function draw() {
 	generateExplosion();
 	ctx.font = '30px VT323'
 	ctx.fillText(`Score: ${score}`, 5, 30)
+	fpsDisplay.textContent = Math.round(fps) + ' FPS';// display the FPS
 	if (score >= winLimit) {
-		score = 0;
-		ctx.font = '40px VT323'
-		ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 			//Resets the game if score is greater than a preset win limit
-		reset()
+		reset();
+		
 			//If player is hit becomes inactive and game stops and message is printed
 	} else if (!player.active) {
-		ctx.font = '40px VT323';
-		ctx.fillStyle = 'red'
-		ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
+			console.log('game over');
 		reset();
 	}
 }
 
+		// ctx.font = '40px VT323';
+		// ctx.fillStyle = 'red'
+		// ctx.fillText('You Lose!!', (canvas_width / 2) - 100, canvas_height / 2);
 function Bullet(I) {
 	I.active = true;
 	I.xVelocity = 0;
@@ -336,6 +350,8 @@ function Enemy(I) {
 				if (player.active) {
 					score += 1
 				}
+			} else if (!this){
+				return ;	
 			}
 		}
 		I.active = I.active && I.inBounds();
@@ -354,14 +370,15 @@ function collides(a, b) {
 function handleCollisions() {
 	playerBullets.forEach(function(bullet) {
 		enemies.forEach(function(enemy) {
-			if (collides(bullet, enemy)) {
+			if (enemy && bullet && collides(bullet, enemy)) {
+				console.log('enemy',enemies)//,'bullet',bullet)
 				enemy.explode();
 				bullet.active = false;
 			}
 		})
 	});
 	enemies.forEach((enemy) => {
-		if (collides(enemy, player)) {
+		if (enemy && player.active && collides(enemy, player)) {
 			enemy.explode();
 			player.explode();
 		}
@@ -369,13 +386,21 @@ function handleCollisions() {
 }
 
 player.explode = function() {
-	if (this.active) {
+	//Add conditional to prevent undefined error
+	if (this && this.active) {
 		this.createExplosion(this.x, this.y, '#525252');
 		this.createExplosion(this.x, this.y, '#FFA318');
 		this.active = false;
+	} else if (!this){
+	return ;	
 	}
-	return;
 }
+
+
+var fps = 60,
+	framesThisSecond = 0,
+	lastFPSUpdate = 0;
+
 var lastFrameTimeMs = 0, // The last time the loop was run
 	maxFPS = 60; // The maximum FPS we want to allow
 var timestep = 1000 / 60;
@@ -386,6 +411,12 @@ function runGame(timeStamp) {
 		frameID = requestAnimationFrame(runGame);
 		return;
 	}
+	if (timeStamp > lastFPSUpdate + 1000) {//Update every second
+		fps = 0.25 * framesThisSecond + (1 - 0.25) * fps; //compute the new FPS	
+		lastFPSUpdate = timeStamp;
+		framesThisSecond = 0;
+	}
+	framesThisSecond++
 	delta += timeStamp - lastFrameTimeMs;
 	lastFrameTimeMs = timeStamp
 
@@ -398,7 +429,9 @@ function runGame(timeStamp) {
 	draw();
 	frameID = requestAnimationFrame(runGame);
 }
-// var frameID = requestAnimationFrame(runGame)
+
+var fpsDisplay = document.getElementById('fpsDisplay');
+
 
 function stop() {
 	ctx.font = '50px VT323';

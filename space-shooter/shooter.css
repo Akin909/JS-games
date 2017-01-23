@@ -25,6 +25,16 @@ body{
     margin: 0;
     padding: 0.7em;
 }
+#fpsDisplay{
+    font-size: 1em;
+    color: black;
+    background: #999999;
+    height: 2em;
+    width: 5%;
+    padding: 0.4em;
+    position: relative;
+    margin: 1em auto;
+}
 .game-container{
     margin-top: 1em;
     width:100%;
@@ -41,9 +51,9 @@ body{
     height: 5rem;
     border-radius:50%;
     border: 0px solid;
-    -webkit-box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
-    -moz-box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
-    box-shadow: -5px 2px 0px -1px rgba(145,142,145,1);
+    -webkit-box-shadow: -4px 2px 0px -1px rgba(145,142,145,1);
+    -moz-box-shadow: -4px 2px 0px -1px rgba(145,142,145,1);
+    box-shadow: -4px 2px 0px -1px rgba(51, 51, 51,1);
     background: #FF0000;
     color: white;
     text-shadow: 1px 1px 0px black;
