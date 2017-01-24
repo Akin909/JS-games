@@ -256,16 +256,16 @@ function reset() {
 }
 var TO_RADIANS = Math.PI/180;
 function rotate(obj,x,y,angle) {
-	var xView = obj.x + obj.width/2; 
-	var yView = obj.y + obj.height/2;
+	var xView = x + obj.width/2; 
+	var yView = y + obj.height/2;
 	//save the current co-ordinate system before changing it
 		ctx.save();
 	//Move to middle of where we want to draw the image
-		ctx.translate(x.View,yView);
+		ctx.translate(x,y);
 	//rotate around that point, converting angle from degrees to radians
-		ctx.rotate(angle * TO_RADIANS);
+		ctx.rotate((angle + 90) * TO_RADIANS);
 	//Draw it up and to the left by half the width and height of the image
-		ctx.drawImage(obj.image,-(xView),-(yView));
+	ctx.drawImage(obj.image,-(obj.height/2),-(obj.width/2));
 	//restore the coordinates to how they were when the function started
 		ctx.restore();
 }
