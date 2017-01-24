@@ -19,6 +19,8 @@ var frameID = 0;
 var running = false,
 	started = false;
 var currentStatus ='';
+var rotating = false;
+var angle = 90;
 
 //This var is a modifier that changes game object velocity based on actual time
 //passing
@@ -56,10 +58,15 @@ var player = {
 	y: canvas_height / 2,
 	width: playerImage.naturalWidth,
 	height: playerImage.naturalHeight,
+	image: playerImage,
+	speed: 0.8, 
 	active: true,
 	draw: function() {
-		if (this.active) {
+		if (this.active && !rotating) {
 			ctx.drawImage(playerImage, this.x, this.y)
+		}
+		if(rotating){
+	rotate(player,player.x,player.y,angle);
 		}
 	}
 }
@@ -185,24 +192,31 @@ function generateExplosion(delta) {
 }
 
 
-
 function update(delta) {
 	//Adding array length stops player from shooting endlessly
-	if (keyStatus.spacebar && playerBullets.length < 7) {
+	// && playerBullets.length < 10
+	if (keyStatus.spacebar) {
 		player.shoot();
 	}
 	//Conditionals stops player from moving of the canvas
 	if (keyStatus.right && player.x + player.width <= canvas_width) {
-		player.x += 0.8 * delta;
+		// player.x += 0.8 * delta;
+		rotating = true;
+		angle += 5;
 	}
 	if (keyStatus.left && player.x >= 0) {
-		player.x -= 0.8 * delta;
+		// player.x -= 0.8 * delta;
+		rotating = true;
+		angle -= 5;
 	}
 	if (keyStatus.up && player.y >= 0) {
-		player.y -= 0.8 * delta;
+		player.y += player.speed * Math.sin(angle * TO_RADIANS) * delta;
+		player.x += player.speed * Math.cos(angle * TO_RADIANS) * delta;
+
 	}
 	if (keyStatus.down && player.y + player.height <= canvas_height) {
-		player.y += 0.8 * delta;
+		player.y -= player.speed * Math.cos(angle * TO_RADIANS) * delta;
+		player.x -= player.speed * Math.sin(angle * TO_RADIANS) * delta;
 	}
 	
 	
@@ -234,16 +248,28 @@ function reset() {
 		currentStatus = 'You Win!'
 	}
 	if (!player.active) {
-		console.log(frameID)
 		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
 		currentStatus = 'Game Over!'
 	}
 }
-
+var TO_RADIANS = Math.PI/180;
+function rotate(obj,x,y,angle) {
+	var xView = obj.x + obj.width/2; 
+	var yView = obj.y + obj.height/2;
+	//save the current co-ordinate system before changing it
+		ctx.save();
+	//Move to middle of where we want to draw the image
+		ctx.translate(x.View,yView);
+	//rotate around that point, converting angle from degrees to radians
+		ctx.rotate(angle * TO_RADIANS);
+	//Draw it up and to the left by half the width and height of the image
+		ctx.drawImage(obj.image,-(xView),-(yView));
+	//restore the coordinates to how they were when the function started
+		ctx.restore();
+}
 function draw() {
-	console.log('frameID: ',frameID);
 	running = true;
 	ctx.clearRect(0, 0, canvas_width, canvas_height);
 	player.draw();
