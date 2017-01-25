@@ -20,7 +20,8 @@ var running = false,
 	started = false;
 var currentStatus = '';
 var rotating = false;
-var angle = 0;
+// var angle = 0;
+var TO_RADIANS = Math.PI / 180;
 
 //This var is a modifier that changes game object velocity based on actual time
 //passing
@@ -61,16 +62,18 @@ var player = {
 	image: playerImage,
 	speed: 0.8,
 	active: true,
+	angle: 20,
+	rotation: this.angle,
 	draw: function() {
 		if (this.active && !rotating) {
 			ctx.drawImage(playerImage, this.x, this.y)
 		}
 		if (rotating) {
-			rotate(player, player.x, player.y, angle);
+			rotate(player, player.x, player.y, this.angle);
 		}
 	}
 }
-
+console.log('rotation',player.rotation)
 var keyStatus = {
 	left: false,
 	right: false,
@@ -201,22 +204,24 @@ function update(delta) {
 	//Conditionals stops player from moving of the canvas
 	if (keyStatus.right && player.x + player.width <= canvas_width) {
 		// player.x += 0.8 * delta;
+		console.log('rotation inside',player.rotation)
 		rotating = true;
-		angle += 5;
+		player.angle += 5;
 	}
 	if (keyStatus.left && player.x >= 0) {
 		// player.x -= 0.8 * delta;
 		rotating = true;
-		angle -= 5;
+		player.angle -= 5;
 	}
 	if (keyStatus.up && player.y >= 0) {
-		player.y += player.speed * Math.sin(angle * TO_RADIANS) * delta;
-		player.x += player.speed * Math.cos(angle * TO_RADIANS) * delta;
+		player.y += player.speed * Math.sin((player.angle + 90 ) * TO_RADIANS) * delta;
+		player.x += player.speed * Math.cos((player.angle + 90 ) * TO_RADIANS) * delta;
 
 	}
 	if (keyStatus.down && player.y + player.height <= canvas_height) {
-		player.y -= player.speed * Math.cos(angle * TO_RADIANS) * delta;
-		player.x -= player.speed * Math.sin(angle * TO_RADIANS) * delta;
+
+		player.y -= player.speed * Math.cos((player.angle + 90 ) * TO_RADIANS) * delta;
+		player.x -= player.speed * Math.sin((player.angle + 90 ) * TO_RADIANS) * delta;
 	}
 
 
@@ -258,10 +263,9 @@ function reset() {
 			currentStatus = 'Game Over!'
 	}
 }
-var TO_RADIANS = Math.PI / 180;
 
 function rotate(obj, x, y, angle) {
-	console.log('x',x,'y',y)
+	
 	var xView = x + obj.width / 2;
 	var yView = y + obj.height / 2;
 	//save the current co-ordinate system before changing it
@@ -269,7 +273,7 @@ function rotate(obj, x, y, angle) {
 	//Move to middle of where we want to draw the image
 	ctx.translate(x + obj.width / 2 , y + obj.height / 2);
 	//rotate around that point, converting angle from degrees to radians
-	ctx.rotate((angle + 90) * TO_RADIANS);
+	ctx.rotate((angle + 90) * TO_RADIANS );
 	//Draw it up and to the left by half the width and height of the image
 	ctx.drawImage(obj.image, -(obj.height / 2), -(obj.width / 2));
 	//restore the coordinates to how they were when the function started
@@ -311,8 +315,8 @@ function Bullet(I) {
 	}
 	I.update = (delta) => {
 		//Add in cos/sin to change bullet trajectory not running as trajectory need to be continously updated to match the ship !!!***
-		I.x += I.xVelocity * Math.sin(angle * TO_RADIANS)* delta
-		I.y -= I.yVelocity * Math.cos(angle * TO_RADIANS)* delta
+		I.x += I.xVelocity * Math.sin(( player.angle + 90 ) * TO_RADIANS )* delta
+		I.y -= I.yVelocity * Math.cos(( player.angle  + 90) * TO_RADIANS )* delta
 
 		I.active = I.active && I.inBounds();
 	}
