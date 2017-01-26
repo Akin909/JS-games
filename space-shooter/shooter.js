@@ -14,7 +14,7 @@ var ctx = canvas.getContext('2d')
 var playerBullets = [];
 var enemies = []
 var score = 0;
-var winLimit = 15;
+var winLimit = 20;
 var frameID = 0;
 var running = false,
 	started = false;
@@ -63,7 +63,7 @@ var player = {
 	speed: 0.8,
 	active: true,
 	angle: 20,
-	rotation: this.angle,
+	rotation: this.angle * TO_RADIANS,
 	draw: function() {
 		if (this.active && !rotating) {
 			ctx.drawImage(playerImage, this.x, this.y)
@@ -73,7 +73,7 @@ var player = {
 		}
 	}
 }
-console.log('rotation',player.rotation)
+
 var keyStatus = {
 	left: false,
 	right: false,
@@ -204,7 +204,6 @@ function update(delta) {
 	//Conditionals stops player from moving of the canvas
 	if (keyStatus.right && player.x + player.width <= canvas_width) {
 		// player.x += 0.8 * delta;
-		console.log('rotation inside',player.rotation)
 		rotating = true;
 		player.angle += 5;
 	}
@@ -214,14 +213,14 @@ function update(delta) {
 		player.angle -= 5;
 	}
 	if (keyStatus.up && player.y >= 0) {
-		player.y += player.speed * Math.sin((player.angle + 90 ) * TO_RADIANS) * delta;
-		player.x += player.speed * Math.cos((player.angle + 90 ) * TO_RADIANS) * delta;
+		player.y += player.speed * Math.sin((player.angle) * TO_RADIANS) * delta;
+		player.x += player.speed * Math.cos((player.angle) * TO_RADIANS) * delta;
 
 	}
 	if (keyStatus.down && player.y + player.height <= canvas_height) {
 
-		player.y -= player.speed * Math.cos((player.angle + 90 ) * TO_RADIANS) * delta;
-		player.x -= player.speed * Math.sin((player.angle + 90 ) * TO_RADIANS) * delta;
+		player.y -= player.speed * Math.cos((player.angle) * TO_RADIANS) * delta;
+		player.x -= player.speed * Math.sin((player.angle) * TO_RADIANS) * delta;
 	}
 
 
@@ -257,25 +256,25 @@ function reset() {
 		// 	console.log('gameOver?')
 		// 	cancelAnimationFrame(frameID)
 		// }, 1000);
-			cancelAnimationFrame(frameID);
-			running = false;
-			started = false;
-			currentStatus = 'Game Over!'
+		cancelAnimationFrame(frameID);
+		running = false;
+		started = false;
+		currentStatus = 'Game Over!'
 	}
 }
 
 function rotate(obj, x, y, angle) {
-	
-	var xView = x + obj.width / 2;
-	var yView = y + obj.height / 2;
+
 	//save the current co-ordinate system before changing it
 	ctx.save();
 	//Move to middle of where we want to draw the image
-	ctx.translate(x + obj.width / 2 , y + obj.height / 2);
+	ctx.translate(x + player.width / 2, y + player.height / 2);
 	//rotate around that point, converting angle from degrees to radians
-	ctx.rotate((angle + 90) * TO_RADIANS );
+	ctx.rotate((angle + 90) * TO_RADIANS);
 	//Draw it up and to the left by half the width and height of the image
-	ctx.drawImage(obj.image, -(obj.height / 2), -(obj.width / 2));
+	if (obj.image) {
+		ctx.drawImage(obj.image, -(obj.height / 2), -(obj.width / 2));
+	}
 	//restore the coordinates to how they were when the function started
 	ctx.restore();
 }
@@ -299,8 +298,8 @@ function draw() {
 
 function Bullet(I) {
 	I.active = true;
-	I.xVelocity = 0;
-	I.yVelocity = -I.speed;
+	I.xVelocity = 0 //* I.speed * Math.sin(player.angle * Math.PI / 180.0);
+	I.yVelocity = -I.speed //* Math.cos(player.angle * Math.PI / 180.0);
 	I.height = 5;
 	I.width = 3;
 	fire.currentTime = 0;
@@ -310,13 +309,28 @@ function Bullet(I) {
 		return I.x >= 0 && I.x <= canvas_width && I.y > 0 && I.y <= canvas_height;
 	}
 	I.draw = function() {
-		ctx.fillStyle = this.color
-		ctx.fillRect(this.x, this.y, this.width, this.height)
+		//Add in cos/sin to change bullet trajectory not running as trajectory need to be continously updated to match the ship !!!***	
+		if (rotating) {
+			console.log(this)
+			ctx.save();
+			//Move to middle of where we want to draw the image
+			ctx.translate(this.x + player.width / 2, this.y + player.height / 2);
+			//rotate around that point, converting angle from degrees to radians
+			ctx.rotate((player.angle + 90) * TO_RADIANS);
+			//Draw it up and to the left by half the width and height of the image
+			ctx.fillstyle = this.color
+			ctx.fillRect(this.x, this.y, this.width, this.height);
+			//restore the coordinates to how they were when the function started
+			ctx.restore();
+		} else {
+			ctx.fillstyle = this.color
+			ctx.fillRect(this.x, this.y, this.width, this.height)
+		}
 	}
 	I.update = (delta) => {
-		//Add in cos/sin to change bullet trajectory not running as trajectory need to be continously updated to match the ship !!!***
-		I.x += I.xVelocity * Math.sin(( player.angle + 90 ) * TO_RADIANS )* delta
-		I.y -= I.yVelocity * Math.cos(( player.angle  + 90) * TO_RADIANS )* delta
+
+		I.x += I.xVelocity
+		I.y -= I.yVelocity * delta //* Math.cos(-( player.angle * TO_RADIANS ) )
 
 		I.active = I.active && I.inBounds();
 	}
