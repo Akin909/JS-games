@@ -34,7 +34,7 @@ if (crossedLeftLimit) {
 		speedY = 1;
 	y += speedY;
 	} else {
-		y = y;
+ y = 10;
 	speedY = 0;	
 
 	}

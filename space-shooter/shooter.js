@@ -14,11 +14,14 @@ var ctx = canvas.getContext('2d')
 var playerBullets = [];
 var enemies = []
 var score = 0;
-var winLimit = 15;
-var frameID;
+var winLimit = 20;
+var frameID = 0;
 var running = false,
 	started = false;
-var currentStatus ='';
+var currentStatus = '';
+var rotating = false;
+// var angle = 0;
+var TO_RADIANS = Math.PI / 180;
 
 //This var is a modifier that changes game object velocity based on actual time
 //passing
@@ -52,14 +55,21 @@ enemyImage.src = 'enemies.png';
 /*Player object with all the relevant attributes with a method with access to
 these*/
 var player = {
-	x: canvas_width / 2,
-	y: canvas_height / 2 + 200,
 	width: playerImage.naturalWidth,
 	height: playerImage.naturalHeight,
+	x: canvas_width / 2 - playerImage.naturalWidth,
+	y: canvas_height - 200,
+	image: playerImage,
+	speed: 0.8,
 	active: true,
+	angle: 20,
+	rotation: this.angle * TO_RADIANS,
 	draw: function() {
-		if (this.active) {
+		if (this.active && !rotating) {
 			ctx.drawImage(playerImage, this.x, this.y)
+		}
+		if (rotating) {
+			rotate(player, player.x, player.y, this.angle);
 		}
 	}
 }
@@ -185,29 +195,37 @@ function generateExplosion(delta) {
 }
 
 
-
 function update(delta) {
 	//Adding array length stops player from shooting endlessly
-	if (keyStatus.spacebar && playerBullets.length < 7) {
+	// && playerBullets.length < 10
+	if (keyStatus.spacebar) {
 		player.shoot();
 	}
 	//Conditionals stops player from moving of the canvas
 	if (keyStatus.right && player.x + player.width <= canvas_width) {
-		player.x += 0.8 * delta;
+		// player.x += 0.8 * delta;
+		rotating = true;
+		player.angle += 5;
 	}
 	if (keyStatus.left && player.x >= 0) {
-		player.x -= 0.8 * delta;
+		// player.x -= 0.8 * delta;
+		rotating = true;
+		player.angle -= 5;
 	}
 	if (keyStatus.up && player.y >= 0) {
-		player.y -= 0.8 * delta;
+		player.y += player.speed * Math.sin((player.angle) * TO_RADIANS) * delta;
+		player.x += player.speed * Math.cos((player.angle) * TO_RADIANS) * delta;
+
 	}
 	if (keyStatus.down && player.y + player.height <= canvas_height) {
-		player.y += 0.8 * delta;
+
+		player.y -= player.speed * Math.cos((player.angle) * TO_RADIANS) * delta;
+		player.x -= player.speed * Math.sin((player.angle) * TO_RADIANS) * delta;
 	}
-	
-	
-	
-playerBullets.forEach(function(bullet) {
+
+
+
+	playerBullets.forEach(function(bullet) {
 		bullet.update(delta);
 	})
 	playerBullets = playerBullets.filter(function(bullet) {
@@ -227,28 +245,41 @@ playerBullets.forEach(function(bullet) {
 
 function reset() {
 	canvas.removeEventListener('click', initialize);
-	// 	ctx.clearRect(0, 0, canvas_width, canvas_height)
 	if (score >= winLimit && running) {
 		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
-		// ctx.font = '40px VT323'
-		// ctx.fillText('You Win!!', (canvas_width / 2) - 50, canvas_height / 2)
 		currentStatus = 'You Win!'
 	}
 	if (!player.active) {
+		// setTimeout(() => {
+		// 	console.log('gameOver?')
+		// 	cancelAnimationFrame(frameID)
+		// }, 1000);
+		cancelAnimationFrame(frameID);
 		running = false;
 		started = false;
-		// ctx.font = '50px VT323';
-		// ctx.fillStyle = 'Green';
-		// ctx.fillText('Game Over!', (canvas_width - 180) / 2, canvas_height / 2);
 		currentStatus = 'Game Over!'
-		cancelAnimationFrame(frameID);
 	}
 }
 
+function rotate(obj, x, y, angle) {
+
+	//save the current co-ordinate system before changing it
+	ctx.save();
+	//Move to middle of where we want to draw the image
+	ctx.translate(x + player.width / 2, y + player.height / 2);
+	//rotate around that point, converting angle from degrees to radians
+	ctx.rotate((angle + 90) * TO_RADIANS);
+	//Draw it up and to the left by half the width and height of the image
+	if (obj.image) {
+		ctx.drawImage(obj.image, -(obj.height / 2), -(obj.width / 2));
+	}
+	//restore the coordinates to how they were when the function started
+	ctx.restore();
+}
+
 function draw() {
-	// 	cancelAnimationFrame(frameID);
 	running = true;
 	ctx.clearRect(0, 0, canvas_width, canvas_height);
 	player.draw();
@@ -260,22 +291,15 @@ function draw() {
 	ctx.font = '40px VT323';
 	ctx.fillStyle = 'green'
 	ctx.fillText(`Score: ${score}`, 5, 30);
-	ctx.fillText(currentStatus,(canvas_width - 180) / 2, canvas_height / 2);
+	ctx.fillText(currentStatus, (canvas_width - 180) / 2, canvas_height / 2);
 	fpsDisplay.textContent = Math.round(fps) + ' FPS'; // display the FPS
-	if (score >= winLimit) {
-		//Resets the game if score is greater than a preset win limit
-		reset();
 
-		//If player is hit becomes inactive and game stops and message is printed
-	} else if (!player.active) {
-		reset();
-	}
 }
 
 function Bullet(I) {
 	I.active = true;
-	I.xVelocity = 0;
-	I.yVelocity = -I.speed;
+	I.xVelocity = 0 //* I.speed * Math.sin(player.angle * Math.PI / 180.0);
+	I.yVelocity = -I.speed //  * Math.sin(( player.angle + 90 ) * Math.PI / 180.0);
 	I.height = 5;
 	I.width = 3;
 	fire.currentTime = 0;
@@ -285,12 +309,29 @@ function Bullet(I) {
 		return I.x >= 0 && I.x <= canvas_width && I.y > 0 && I.y <= canvas_height;
 	}
 	I.draw = function() {
-		ctx.fillStyle = this.color
-		ctx.fillRect(this.x, this.y, this.width, this.height)
+		//Add in cos/sin to change bullet trajectory not running as trajectory need to be continously updated to match the ship !!!***	
+		if (rotating) {
+			// console.log('rotating',this)
+			ctx.save();
+			//Move to middle of where we want to draw the image
+			ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+			//rotate around that point, converting angle from degrees to radians
+			ctx.rotate((player.angle) * TO_RADIANS);
+			//Draw it up and to the left by half the width and height of the image
+			ctx.fillstyle = this.color
+			ctx.fillRect(-this.x, -this.y, this.width, this.height);
+			//restore the coordinates to how they were when the function started
+			ctx.restore();
+		} else {
+			ctx.fillstyle = this.color
+			// console.log('non-rotating',this)
+			ctx.fillRect(this.x, this.y, this.width, this.height)
+		}
 	}
 	I.update = (delta) => {
-		I.x += I.xVelocity * delta
-		I.y += I.yVelocity * delta
+
+		I.x += I.xVelocity
+		I.y -= I.yVelocity * delta //* Math.cos(-( player.angle * TO_RADIANS ) )
 
 		I.active = I.active && I.inBounds();
 	}
@@ -341,8 +382,6 @@ function Enemy(I) {
 
 	I.draw = function() {
 		ctx.drawImage(enemyImage, I.x, I.y)
-			// ctx.fillStyle = this.color;
-			// ctx.fillRect(this.x, this.y, this.width, this.height);
 	};
 
 	I.update = function(delta) {
@@ -439,6 +478,17 @@ function runGame(timeStamp) {
 	}
 	draw();
 	frameID = requestAnimationFrame(runGame);
+	//Reset called from within run game to ensure access to right FrameID
+	if (score >= winLimit) {
+		//Resets the game if score is greater than a preset win limit
+		reset();
+		ctx.fillText(currentStatus, canvas_width / 2 - 80, canvas_height / 2)
+
+		//If player is hit becomes inactive and game stops and message is printed
+	} else if (!player.active) {
+		reset();
+		ctx.fillText(currentStatus, canvas_width / 2 - 80, canvas_height / 2)
+	}
 }
 
 var fpsDisplay = document.getElementById('fpsDisplay');
@@ -446,6 +496,7 @@ var fpsDisplay = document.getElementById('fpsDisplay');
 
 function stop() {
 	if (running) {
+		currentStatus = 'Paused';
 		ctx.font = '50px VT323';
 		ctx.fillStyle = 'Green';
 		ctx.fillText(currentStatus, (canvas_width - 100) / 2, canvas_height / 2)
@@ -458,6 +509,7 @@ function stop() {
 function start() {
 	if (!started) { //don't request multiple frames
 		started = true;
+		currentStatus = '';
 		//Dummy frame to get our timestamps and initial drawing right.
 		//Track the frame ID so we can cancel it if we stop quickly.
 		frameID = requestAnimationFrame(function(timeStamp) {
