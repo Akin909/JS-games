@@ -103,7 +103,7 @@ function update(modifier) {
 	} else if (monster.y <= 32){
 		monster.y += monster.speed * modifier;	
 	}
-
+	
 	//Collision detection
 	if (hero.x <= (monster.x + 32) &&
 		monster.x <= (hero.x + 32) &&
